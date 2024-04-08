@@ -35,6 +35,8 @@ WiFiClient client;
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, 1);
 
+int sleepCounter =0;
+
 void setup() {
   Serial.begin(115200);
   SPI.begin();
@@ -50,6 +52,12 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.println("Connecting to WiFi...");
+    sleepCounter++;
+    if (sleepCounter>20) {
+      lcd.clear();
+      lcd.noBacklight();
+      ESP.deepSleep(0);
+    }
   }
   Serial.println("Connected to WiFi");
   lcd.clear();
@@ -58,6 +66,7 @@ void setup() {
   delay(1500);
   lcd.clear();
   timeClient.begin();
+  sleepCounter = 0;
 }
 
 void loop() {
@@ -68,9 +77,17 @@ void loop() {
   byte len;
   MFRC522::StatusCode status;
 
+  if(sleepCounter>1000) {
+    lcd.clear();
+    lcd.noBacklight();
+    ESP.deepSleep(0);
+  }
+
   if (!mfrc522.PICC_IsNewCardPresent()) {
     lcd.setCursor(3, 0);
     lcd.print("Reading...");
+    sleepCounter++;
+    //Serial.println("sleep in"+100-sleepCounter);
     return;
   }
 
